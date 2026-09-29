@@ -1,6 +1,6 @@
 # Doodler
 Service learning project
-##Objective Doodle
+## Objective
 - Doodle web game
 - Class period based updating
 - Social community, media function
