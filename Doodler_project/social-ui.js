@@ -16,7 +16,11 @@
     el('social-connected').inert = true;
     status('불러오는 중…');
     try { await task(); }
-    catch (error) { status(error.message || '연결에 실패했습니다. 다시 시도하세요.'); }
+    catch (error) {
+      const message = error.message || '연결에 실패했습니다. 다시 시도하세요.';
+      status(message);
+      if (location.hash === '#profiles') el('profile-result-count').textContent = message;
+    }
     finally {
       busy = false;
       el('social-connected').inert = false;
@@ -25,6 +29,7 @@
       if (!api.session && !el('social-member').hidden) {
         accountView(); el('social-artworks').replaceChildren(); el('social-profiles').replaceChildren();
         el('social-more').hidden = true;
+        renderProfiles();
       }
     }
   }
@@ -49,6 +54,15 @@
     el('social-profile').reset();
     const [profile] = await api.myProfile();
     if (profile) for (const key of ['handle','display_name','bio']) el('social-profile').elements[key].value = profile[key];
+  }
+  async function loadAfterLogin() {
+    const failures = [];
+    try { await loadProfile(); } catch (error) { failures.push('프로필을 불러오지 못했습니다: ' + error.message); }
+    feed = {};
+    try { await loadFeed(); } catch (error) { failures.push('공개 그림을 불러오지 못했습니다: ' + error.message); }
+    if (api.session) status('로그인했습니다. ' + (failures.join(' ') || '프로필을 저장한 뒤 그림을 업로드하세요.'));
+    else status('로그인이 만료됐습니다. 다시 로그인하세요.');
+    renderProfiles();
   }
   async function loadFeed(append = false) {
     const nextOffset = append ? offset : 0;
@@ -91,7 +105,7 @@
       try { await (signup ? api.signUp(email,password) : api.signIn(email,password)); }
       finally { form.elements.password.value = ''; }
       accountView();
-      if (api.session) { await loadProfile(); feed = {}; await loadFeed(); status('로그인했습니다. 프로필을 저장한 뒤 그림을 업로드하세요.'); }
+      if (api.session) await loadAfterLogin();
       else status('가입 요청을 보냈습니다. 이메일을 확인한 뒤 로그인하세요.');
     });
   };
@@ -100,12 +114,13 @@
     finally {
       accountView(); el('social-profile').reset(); el('social-artworks').replaceChildren(); el('social-profiles').replaceChildren(); el('social-more').hidden = true;
       feed = {}; offset = 0;
+      renderProfiles();
     }
     await loadFeed(); status('로그아웃했습니다.');
   });
   el('social-profile').onsubmit = event => {
     event.preventDefault(); const form = event.currentTarget;
-    run(async () => { await api.saveProfile({handle:form.elements.handle.value.trim(),display_name:form.elements.display_name.value.trim(),bio:form.elements.bio.value.trim()}); status('프로필을 저장했습니다.'); });
+    run(async () => { await api.saveProfile({handle:form.elements.handle.value.trim(),display_name:form.elements.display_name.value.trim(),bio:form.elements.bio.value.trim()}); status('프로필을 저장했습니다.'); renderProfiles(); });
   };
   el('social-upload').onsubmit = event => {
     event.preventDefault();
@@ -119,29 +134,61 @@
   el('social-mine').onclick = () => run(async () => { feed = {mine:true}; await loadFeed(); status('클라우드 내 그림을 불러왔습니다.'); });
   el('social-refresh').onclick = () => run(async () => { await loadFeed(); status('새로고침했습니다.'); });
   el('social-more').onclick = () => run(async () => { await loadFeed(true); status('다음 그림을 불러왔습니다.'); });
-  el('social-search').onsubmit = event => {
-    event.preventDefault(); const query = event.currentTarget.elements.query.value;
-    run(async () => {
+  function remoteProfileCard(profile, follows) {
+    const card = document.createElement('article'); card.className = 'profile-card';
+    card.append(profileSummary({name:profile.display_name,handle:profile.handle,bio:profile.bio,tags:[]}));
+    card.append(button('공개 그림 보기',async () => {
+      // Route to the existing paginated gallery, without triggering its initial all-user load.
+      opened = true; feed = {owner:profile.id}; location.hash = 'community';
+      await loadFeed(); status('프로필의 공개 그림을 불러왔습니다.'); el('social-feed-label').scrollIntoView({block:'center'});
+    }));
+    if (api.session && profile.id !== api.session.user.id) {
+      let following = follows.has(profile.id);
+      const follow = button(following ? '팔로우 취소' : '팔로우',async () => {
+        await api.follow(profile.id,!following); following = !following;
+        follow.textContent = following ? '팔로우 취소' : '팔로우'; follow.setAttribute('aria-pressed',String(following)); status('팔로우를 반영했습니다.');
+      });
+      follow.setAttribute('aria-pressed',String(following)); card.append(follow);
+    }
+    return card;
+  }
+  async function searchProfiles(query, target) {
       const profiles = await api.profiles(query);
       const follows = api.session ? new Set((await api.myFollows()).map(row => row.following_id)) : new Set();
-      el('social-profiles').replaceChildren();
-      profiles.forEach(profile => {
-        const card = document.createElement('article'); card.className = 'profile-card';
-        card.append(profileSummary({name:profile.display_name,handle:profile.handle,bio:profile.bio,tags:[]}));
-        card.append(button('공개 그림 보기',async () => { feed = {owner:profile.id}; await loadFeed(); status('프로필의 공개 그림을 불러왔습니다.'); el('social-feed-label').scrollIntoView({block:'center'}); }));
-        if (api.session && profile.id !== api.session.user.id) {
-          let following = follows.has(profile.id);
-          const follow = button(following ? '팔로우 취소' : '팔로우',async () => {
-            await api.follow(profile.id,!following); following = !following;
-            follow.textContent = following ? '팔로우 취소' : '팔로우'; follow.setAttribute('aria-pressed',String(following)); status('팔로우를 반영했습니다.');
-          });
-          follow.setAttribute('aria-pressed',String(following)); card.append(follow);
-        }
-        el('social-profiles').append(card);
-      });
-      status(`프로필 ${profiles.length}명을 찾았습니다.`);
-    });
+      // Ignore a response for a query edited while its request was in flight.
+      if (target === 'profile-grid' && (el('profile-query').value.trim() !== query || location.hash !== '#profiles')) return null;
+      el(target).replaceChildren(...profiles.map(profile => remoteProfileCard(profile,follows)));
+      return profiles.length;
+  }
+  el('social-search').onsubmit = event => {
+    event.preventDefault(); const query = event.currentTarget.elements.query.value;
+    run(async () => { const count = await searchProfiles(query,'social-profiles'); status(`프로필 ${count}명을 찾았습니다.`); });
   };
+  let profileSearchTimer;
+  window.renderRemoteProfiles = () => {
+    clearTimeout(profileSearchTimer);
+    el('profile-grid').replaceChildren(); el('profile-detail').hidden = true; el('profile-empty').hidden = true;
+    if (location.hash !== '#profiles') return;
+    el('profile-result-count').textContent = '프로필을 찾는 중…';
+    profileSearchTimer = setTimeout(() => {
+      if (busy) { window.renderRemoteProfiles(); return; }
+      const query = el('profile-query').value.trim();
+      run(async () => {
+        try {
+          const count = await searchProfiles(query,'profile-grid');
+          if (count === null) return;
+          el('profile-result-count').textContent = `프로필 ${count}명 · 최대 30명`;
+          el('profile-empty').hidden = count > 0;
+          status(`프로필 ${count}명을 찾았습니다.`);
+        } catch (error) { el('profile-result-count').textContent = '프로필을 불러오지 못했습니다. ' + error.message; throw error; }
+      });
+    },200);
+  };
+  el('profiles').querySelector('.badge').textContent = '프로필';
+  el('profiles').querySelector('.preview-notice').textContent = '가입 후 프로필을 저장한 사람들을 찾을 수 있습니다. 아이디, 닉네임, 소개로 검색하세요.';
+  el('profile-query').placeholder = '아이디, 닉네임, 관심 주제';
+  el('profile-query').maxLength = 40;
+  renderProfiles();
   window.addEventListener('hashchange',() => { if (location.hash === '#community') localOptions(); });
   // Confirmation links can return with a token fragment. Password login remains explicit.
   if (/^#(?:access_token|error)=/.test(location.hash)) {

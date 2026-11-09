@@ -16,7 +16,7 @@ The local drawing app works without accounts or an internet connection. Communit
 - Community provides email sign-up/sign-in/logout, profile creation/editing, and real nickname/handle/bio search. Profiles and follow relationships are public. Emails stay in Auth, outside public profiles.
 - Local saving never uploads. Save a profile, select a local drawing, then choose `나만 보기` (default) or `전체 공개`. The PNG, title, topic ID/day, mode, and caption are copied. A unique owner/source ID prevents duplicate imports. Local originals survive upload failure; parent-comparison metadata stays local.
 - `클라우드 내 그림` shows uploaded artwork across devices after login. This collection is separate from the local journal, drafts, and weekly completion calendar; there is no automatic merge/sync.
-- Public gallery and profile artwork views page through 12 items, newest first. Profile search returns at most 30 results. Likes and follows persist. A following feed, topic filters, and follower counts remain future work. The original Gallery/Profile Search tabs remain labeled examples.
+- Public gallery and profile artwork views page through 12 items, newest first. Profile search returns at most 30 results. The top Profile Search tab uses real profiles when configured, supports follows, and opens a selected user's public artwork in Community. Without configuration it remains a labeled preview. The original Gallery remains an example; likes and follows in Community persist. A following feed, topic filters, and follower counts remain future work.
 - Owners can change visibility or delete cloud artwork. Private image URLs expire after 60 seconds; previously issued URLs remain usable until expiry. Downloads cannot be recalled.
 
 ## Failures and operation

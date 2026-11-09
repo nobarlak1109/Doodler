@@ -160,6 +160,7 @@ function showProfile(profile){
   $('#profile-detail').hidden=false;$('#close-profile').focus();$('#profile-detail').scrollIntoView({block:'start'});
 }
 function renderProfiles(){
+  if (typeof window.renderRemoteProfiles === 'function') { window.renderRemoteProfiles(); return; }
   const query=$('#profile-query').value.trim().normalize('NFKC').toLocaleLowerCase('ko-KR');
   const matches=exampleProfiles.filter(profile=>[profile.name,profile.handle,profile.bio,...profile.tags].join(' ').normalize('NFKC').toLocaleLowerCase('ko-KR').includes(query));
   $('#profile-grid').replaceChildren();$('#profile-detail').hidden=true;$('#profile-empty').hidden=matches.length>0;

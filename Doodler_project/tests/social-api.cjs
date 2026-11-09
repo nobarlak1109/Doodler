@@ -87,6 +87,11 @@ test('pagination and visibility filters stay explicit',async () => {
   await api.artworks({offset:12}); await api.artworks({mine:true});
   assert.match(calls[0].url,/visibility=eq.public/); assert.match(calls[0].url,/offset=12/);
   assert.match(calls[1].url,new RegExp('owner_id=eq.'+owner));
+  for (const call of calls) {
+    const select = new URL(call.url).searchParams.get('select');
+    assert.match(select,/profiles!artworks_owner_id_fkey\(display_name,handle\)/);
+    assert.match(select,/likes!likes_artwork_id_fkey\(count\)/);
+  }
 });
 test('delete hides metadata first, reports storage cleanup failure, rejects other owners',async () => {
   const {api,calls} = client(url => url.includes('/storage/') ? ok({message:'storage down'},503) : ok({}));

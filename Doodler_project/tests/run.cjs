@@ -43,6 +43,8 @@ async function main() {
   const errors = [];
   await send('Runtime.enable');
   await send('Page.enable');
+  // Keep offline checks deterministic even when the real project is configured.
+  await send('Page.addScriptToEvaluateOnNewDocument', { source: "Object.defineProperty(window,'DOODLER_SOCIAL_CONFIG',{value:{url:'',publishableKey:''},configurable:true});" });
   // Capture uncaught runtime errors in addition to the harness result.
   socket.addEventListener('message', event => {
     const message = JSON.parse(event.data);
@@ -94,8 +96,7 @@ async function main() {
     await send('Network.enable');
     await send('Network.setBlockedURLs', { urls: ['https://example.supabase.co/*'] });
     const fixture = await send('Page.addScriptToEvaluateOnNewDocument', { source: socialBrowser.init });
-    await send('Page.navigate', { url: pathToFileURL(path.join(__dirname, '..', 'index.html')).href + '#community' });
-    await send('Page.reload');
+    await send('Page.navigate', { url: pathToFileURL(path.join(__dirname, '..', 'index.html')).href + '?social-test=' + name + '#community' });
     await pause(300);
     const socialChecks = await evaluate(socialBrowser.check);
     console.log(name + ': PASS ' + socialChecks + ' community UI checks (mock REST)');

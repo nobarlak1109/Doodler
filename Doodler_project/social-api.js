@@ -68,7 +68,7 @@
     }
     artworks({mine=false, owner=null, offset=0} = {}) {
       const filter = mine ? 'owner_id=eq.' + this.requireUser() : 'visibility=eq.public' + (owner ? '&owner_id=eq.' + encodeURIComponent(owner) : '');
-      return this.request('/rest/v1/artworks?select=*,profiles(display_name,handle),likes(count)&' + filter + '&order=created_at.desc,id.desc&limit=12&offset=' + offset);
+      return this.request('/rest/v1/artworks?select=*,profiles!artworks_owner_id_fkey(display_name,handle),likes!likes_artwork_id_fkey(count)&' + filter + '&order=created_at.desc,id.desc&limit=12&offset=' + offset);
     }
     async imageURL(path) {
       const data = await this.request('/storage/v1/object/sign/drawings/' + path.split('/').map(encodeURIComponent).join('/'), {method:'POST',body:{expiresIn:60}});

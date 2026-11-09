@@ -6,7 +6,7 @@ Last reviewed: 2026-11-10. See [Logs/Week_2.md](Logs/Week_2.md) for local/commun
 
 Help university students practice imagination through short, approachable drawing activities. The current temporary working title is **낙서장**, as requested by the user. The final name remains open.
 
-The static Korean-language app works offline without dependencies. An optional Supabase community client, schema, and deployment guide now exist; no external backend is connected or live-tested. Original gallery/profile search records remain samples. Local drawings/drafts remain browser-specific; explicit Community uploads form a separate account-based cloud collection.
+The static Korean-language app works offline without dependencies. Supabase public configuration is now present and the corrected public artwork query has passed a live read-only check. Top profile search uses remote profiles when configured; the original Gallery remains a sample. Local drawings/drafts remain browser-specific; explicit Community uploads form a separate cloud collection. Full two-account live acceptance remains pending.
 
 ## Completed in source
 
@@ -88,4 +88,4 @@ Completed local tasks were checked using the Chrome harness and native pointer c
 - [x] **T29: Temporary profile search.** Search clearly labeled fixture profiles by nickname, handle, or interest; show profile artwork previews and empty/reset states. This does not complete T13 or provide actual identity, remote search, or follows.
 - [x] **T30: Project introduction.** Add a compact page based on Plan.md covering the university-student objective, usage, developers/GIST service learning, current local scope, and planned social/game direction.
 
-Latest evidence: 47 local checks and 14 mock-community checks per desktop/mobile viewport, native pointer checks, and direct route checks. The 11 social API contract/failure checks pass. Live Supabase permissions remain unverified. See the 2026-11-10 entry in Logs/Week_2.md.
+Latest evidence: 47 local checks and 22 mock-community checks per desktop/mobile viewport, native pointer checks, and direct route checks. The 11 social API checks include explicit foreign-key joins. A live anonymous artwork query succeeds; two-account permissions remain unverified. See the 2026-11-10 follow-up in Logs/Week_2.md.
