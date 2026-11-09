@@ -4,18 +4,21 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
+const socialBrowser = require('./social-browser.cjs');
 const browser = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'little-draw-tests-'));
 const proc = spawn(browser, ['--headless', '--disable-gpu', '--no-first-run', '--remote-debugging-port=0', '--allow-file-access-from-files', '--user-data-dir=' + profile], { stdio: 'ignore', windowsHide: true });
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 let socket;
+// An unresolved WebSocket promise alone may let Node exit successfully without checks.
+const watchdog = setTimeout(() => { console.error('Browser checks timed out before completion'); proc.kill(); process.exitCode = 1; socket?.close(); }, 60000);
 async function main() {
   const portFile = path.join(profile, 'DevToolsActivePort');
   for (let n = 0; n < 100 && !fs.existsSync(portFile); n++) await pause(100);
   const port = fs.readFileSync(portFile, 'utf8').split('\n')[0];
   const pages = await (await fetch('http://127.0.0.1:' + port + '/json')).json();
   socket = new WebSocket(pages.find(p => p.type === 'page').webSocketDebuggerUrl);
-  await new Promise((resolve, reject) => { socket.onopen = resolve; socket.onerror = reject; });
+  await new Promise((resolve, reject) => { socket.onopen = resolve; socket.onerror = reject; socket.onclose = () => reject(Error('Chrome disconnected before opening DevTools')); });
   let id = 0;
   const pending = new Map();
   socket.onmessage = event => {
@@ -26,6 +29,7 @@ async function main() {
       message.error ? reject(Error(message.error.message)) : resolve(message.result);
     }
   };
+  socket.onclose = () => { for (const request of pending.values()) request.reject(Error('Chrome disconnected during browser checks')); pending.clear(); };
   const send = (method, params = {}) => new Promise((resolve, reject) => {
     const requestId = ++id;
     pending.set(requestId, { resolve, reject });
@@ -38,6 +42,7 @@ async function main() {
   };
   const errors = [];
   await send('Runtime.enable');
+  await send('Page.enable');
   // Capture uncaught runtime errors in addition to the harness result.
   socket.addEventListener('message', event => {
     const message = JSON.parse(event.data);
@@ -75,16 +80,30 @@ async function main() {
     if (!await evaluate("hasDrawing && !drawing && Boolean(readStore('jogak-draft',null))")) throw Error(name + ' native pointer input failed');
     console.log(name + ': native pointer and capture PASS');
     await evaluate('resetCanvas()');
-    for (const page of ['profiles', 'about']) {
+    for (const page of ['profiles', 'community', 'about']) {
       await send('Page.navigate', { url: pathToFileURL(path.join(__dirname, '..', 'index.html')).href + '#' + page });
       await pause(200);
       const layout = await evaluate(`({visible:!document.querySelector('#${page}').hidden,width:innerWidth,content:document.documentElement.scrollWidth,headerTop:document.querySelector('.header').getBoundingClientRect().top})`);
       if (!layout.visible || layout.width !== width || layout.content > width || layout.headerTop < 0) throw Error(name + ' ' + page + ' route/layout failed');
+      if (page === 'community') {
+        if (!await evaluate("document.querySelector('#social-connected').hidden && document.querySelector('#social-status').textContent.includes('준비')")) throw Error('Unconfigured community should stay disabled');
+      }
       const pageShot = await send('Page.captureScreenshot', { format: 'png' });
       fs.writeFileSync(path.join(__dirname, name + '-' + page + '.png'), Buffer.from(pageShot.data, 'base64'));
     }
+    await send('Network.enable');
+    await send('Network.setBlockedURLs', { urls: ['https://example.supabase.co/*'] });
+    const fixture = await send('Page.addScriptToEvaluateOnNewDocument', { source: socialBrowser.init });
+    await send('Page.navigate', { url: pathToFileURL(path.join(__dirname, '..', 'index.html')).href + '#community' });
+    await send('Page.reload');
+    await pause(300);
+    const socialChecks = await evaluate(socialBrowser.check);
+    console.log(name + ': PASS ' + socialChecks + ' community UI checks (mock REST)');
+    const socialShot = await send('Page.captureScreenshot', { format: 'png' });
+    fs.writeFileSync(path.join(__dirname, name + '-community-connected.png'), Buffer.from(socialShot.data, 'base64'));
+    await send('Page.removeScriptToEvaluateOnNewDocument', { identifier: fixture.identifier });
   }
   if (errors.length) throw Error('Uncaught browser errors: ' + errors.join(', '));
   await send('Browser.close');
 }
-main().catch(error => { console.error(error); process.exitCode = 1; }).finally(() => { socket?.close(); proc.kill(); });
+main().catch(error => { console.error(error); process.exitCode = 1; }).finally(() => { clearTimeout(watchdog); socket?.close(); proc.kill(); });

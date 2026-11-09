@@ -33,7 +33,6 @@ The daily cadence, weekly topic rotation, Asia/Seoul boundary, repeated submissi
 
 Append future work and verification here until the next project-week log is opened.
 
-
 ## 2026-10-13 — Layout, typography, and temporary title
 
 User direction: make the layout, font, and narration more compact and robust; use sharp box edges; temporarily rename the project 낙서장.
@@ -58,3 +57,15 @@ User direction: make the layout, font, and narration more compact and robust; us
 - Verification: JavaScript syntax passed; 47 browser checks per desktop/mobile viewport (1280×900 and 390×844), native Chrome mouse/touch capture, and direct profile/introduction route visibility/overflow checks. Tests exercise fill containment/no-op/undo/redo; shape ghost-free preview, cancellation, commit, redo, circle outlines and reverse rectangles; stationary spray/release/undo; search/detail/empty/reset; and outline content. The first tool-test attempt exposed a harness coordinate/hidden-canvas issue; coordinates now refer to the visible canvas rather than relying on screen positions outside it.
 - Screenshots reviewed for drawing, profile search, and introduction at desktop/mobile sizes. Fill can cross open outlines; near-color tolerance is 24 per channel. Physical-device and Edge checks remain open.
 - Final navigation refinement: section scroll margins prevent native fragment jumps from hiding the header. Direct-route checks now also verify header visibility; desktop/mobile checks pass.
+
+## 2026-11-10 — Optional community integration
+
+User requested a brief explanation of external social-service requirements and preparation of what can be done locally.
+
+- Prepared Supabase as the initial Auth/Postgres/private Storage integration alongside Vercel. Added backend/001_social.sql with profiles, artworks, likes, follows, ownership/visibility policies, unique identities/reactions, metadata constraints, and a 2 MB PNG bucket. Migration is intended for a new project and has not been executed.
+- Added an optional dependency-free REST client and Community tab: email signup/login/logout, profile edits/search, deliberate private/public local-artwork import, cloud collection, public/profile artwork pagination, visibility changes, deletion, likes and follows. The blank public config disables online actions. Sessions are memory-only; local drawings/drafts are never automatically uploaded.
+- Added backend/SETUP.md covering public configuration, Auth/Vercel settings, two-account direct-API access checks, signed URL expiry, orphan cleanup, and remaining operational work. Updated README/Plan/TODO without marking live-service tasks complete.
+- Supabase plugin discovered and suggested, but no connection confirmed. No remote accounts, schema, uploads, GitHub pushes, or deployments were performed.
+- Verification: syntax checks passed; 11 API contract/failure tests passed. Chrome passes 47 existing local checks and 14 simulated community checks at both 1280×900 and 390×844, plus native mouse/touch capture and route/overflow checks. The simulated backend covers auth/profile forms, private upload, explicit publication, plain-text rendering, likes/follows, upload failure/local preservation, and logout. These checks do not verify SQL or real Supabase behavior.
+- Fixed the browser runner to enable the Page domain and to fail on DevTools disconnection/timeouts. Its prior unresolved-promise behavior could exit successfully before checks completed. Sandbox Chrome disconnected; the complete suite passed outside the sandbox using an isolated test profile.
+- Remaining: connect a team-owned project, apply migration, configure public URL/key and Auth, live-test two identities including direct access attempts, and complete T17 before public operation. Cloud records remain separate from local journal/calendar; password recovery, authoritative topics, following/topic feeds, and moderation are pending.

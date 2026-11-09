@@ -1,12 +1,12 @@
 # Project TODO
 
-Last reviewed: 2026-10-13. Based on all source files, README.md, Plan.md, and the five reference images. Baseline source review followed by Week 2 Chrome browser checks. See [Logs/Week_2.md](Logs/Week_2.md) for results and remaining manual checks.
+Last reviewed: 2026-11-10. See [Logs/Week_2.md](Logs/Week_2.md) for local/community checks and remaining live-service verification.
 
 ## Goal and current state
 
 Help university students practice imagination through short, approachable drawing activities. The current temporary working title is **낙서장**, as requested by the user. The final name remains open.
 
-The current app is a static, Korean-language local prototype: open index.html without installing dependencies. It has no backend, accounts, shared artwork, or deployment configuration. Its six gallery pictures and initial like counts are samples. Saved drawings and like selections belong to the current browser. Week 2 adds the local daily-topic, journal, progress, practice/variation, recovery, export, and deletion flow.
+The static Korean-language app works offline without dependencies. An optional Supabase community client, schema, and deployment guide now exist; no external backend is connected or live-tested. Original gallery/profile search records remain samples. Local drawings/drafts remain browser-specific; explicit Community uploads form a separate account-based cloud collection.
 
 ## Completed in source
 
@@ -39,7 +39,9 @@ Baseline features were reviewed in source; the current app subsequently passed t
 
 ## P2 — Build the planned shared service
 
-Before implementation, agree on backend/hosting, account vs. anonymous identity, public visibility, consent, and who will operate the service. No technology stack has been selected.
+Supabase Auth/Postgres/private Storage has been prepared alongside Vercel static hosting. Email/password identity and private-by-default explicit uploads exist in source. Team ownership/operation, connection, and live acceptance remain outstanding; see [backend/SETUP.md](backend/SETUP.md).
+
+2026-11-10 partial progress (T12–T17 remain unchecked): migration includes profiles/artwork/likes/follows, constraints and RLS. Community has email auth, profile edits/search, explicit PNG import, private/public visibility, cloud collection, paginated public/profile artwork, deletion, likes and follows. Client and mock-browser tests pass. No live migration, two-account checks, authoritative topics, automatic journal sync, password recovery, reporting/moderation, or operational deployment has been completed. T15 topic filters and T26 following feed remain pending.
 
 - [ ] **T12: Design the shared data model and access rules.** Define users/profiles, topics, artwork metadata/files, likes, and follows. Specify ownership, public/private visibility, deletion behavior, upload limits, and server-side validation.
 - [ ] **T13: Implement identity and profiles.** Depends on T12. Provide the selected sign-in/identity flow, profile editing, and another user's artwork collection.
@@ -79,11 +81,11 @@ Suggested feature sequence after P0: T07–T10, T21, T24–T25; pilot T22–T23;
 
 ## Week 2 status evidence
 
-Completed local tasks were checked using the 25-check desktop/mobile Chrome harness and native mouse/touch checks in `tests/run.cjs`; see [Logs/Week_2.md](Logs/Week_2.md). T01 remains open for Edge and real-device coverage; T05's browser export/deletion behavior passes, with manual OS download confirmation outstanding. T06 remains open for a full accessibility audit. T07 remains open: daily Asia/Seoul topics, repeat submissions, session-topic retention, and three-minute modes are initial defaults pending team/pilot review. T12–T17 and T26–T27 remain future shared-service work.
+Completed local tasks were checked using the Chrome harness and native pointer checks in `tests/run.cjs`; see [Logs/Week_2.md](Logs/Week_2.md). T01 remains open for Edge and real-device coverage; T05's browser export/deletion behavior passes, with manual OS download confirmation outstanding. T06 remains open for a full accessibility audit. T07's initial participation defaults await team/pilot review. T12–T17 are partially implemented and await live setup/acceptance; T26–T27 remain incomplete.
 
 - [x] **T28: Refine layout and working title.** Use 낙서장, square corners, compact spacing, stronger typography, and concise functional copy across the frontend and exports. Verification is recorded in Logs/Week_2.md.
 
 - [x] **T29: Temporary profile search.** Search clearly labeled fixture profiles by nickname, handle, or interest; show profile artwork previews and empty/reset states. This does not complete T13 or provide actual identity, remote search, or follows.
 - [x] **T30: Project introduction.** Add a compact page based on Plan.md covering the university-student objective, usage, developers/GIST service learning, current local scope, and planned social/game direction.
 
-Latest evidence: `tests/run.cjs` passes 47 browser checks per desktop/mobile viewport, native mouse/touch capture, and direct profile/introduction route layout checks. See the 2026-10-13 tools/pages entry in Logs/Week_2.md.
+Latest evidence: 47 local checks and 14 mock-community checks per desktop/mobile viewport, native pointer checks, and direct route checks. The 11 social API contract/failure checks pass. Live Supabase permissions remain unverified. See the 2026-11-10 entry in Logs/Week_2.md.

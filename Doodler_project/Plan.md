@@ -99,4 +99,8 @@ Use the temporary name **낙서장**. Favor a compact drawing workspace with squ
 
 ## Basic tools and supporting pages — 2026-10-13
 
-The local workspace now includes bucket fill, spray, line/circle/rectangle outlines, and redo. Profile search is a clearly labeled fixture-data preview with searchable nicknames, handles, interests, and sample artwork. The introduction page presents the original project objective and team, use instructions, current local scope, and planned social/game features. Real identity, public profiles, and follows remain Stage B work.
+The local workspace now includes bucket fill, spray, line/circle/rectangle outlines, and redo. Profile search is a clearly labeled fixture-data preview with searchable nicknames, handles, interests, and sample artwork. The introduction page presents the original project objective and team, use instructions, current local scope, and planned social/game features.
+
+## Optional community foundation — 2026-11-10
+
+Stage B now has a prepared Supabase migration and an optional Community tab for email identity, profiles, explicit private/public drawing import, a paginated gallery, likes, and follows. The existing offline drawing flow and example pages remain available. Supabase is the initial implementation choice alongside Vercel; project connection, migration execution, live access-rule checks, team operation, moderation, authoritative topics, and the following feed remain incomplete. See backend/SETUP.md and T12–T17/T26. Local and mocked tests do not establish live-service acceptance.
