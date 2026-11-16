@@ -1,6 +1,6 @@
 # Project TODO
 
-Last reviewed: 2026-11-10. See [Logs/Week_2.md](Logs/Week_2.md) for local/community checks and remaining live-service verification.
+Last reviewed: 2026-11-16. See [Logs/Week_2.md](Logs/Week_2.md) for local/community checks and remaining live-service verification.
 
 ## Goal and current state
 
@@ -32,7 +32,7 @@ Baseline features were reviewed in source; the current app subsequently passed t
 ## P1 — Complete the recurring drawing activity
 
 - [ ] **T07: Agree on participation rules.** Decide daily vs. another topic cadence, timezone, repeat submissions, and what happens to an in-progress drawing when the topic changes. Suggested starting point: daily topics using Asia/Seoul, with each drawing retaining the topic it started with. This is a proposal, not an agreed requirement.
-- [x] **T08: Implement scheduled topics.** Depends on T07. Replace the hardcoded garden prompt with a topic list and a consistent date-selection function. Save topic ID/title with each drawing and update related screen copy. Acceptance: topics change on the agreed boundary and old artwork retains its original topic.
+- [x] **T08: Implement scheduled topics.** Daily rotation reads an extendable `topics.js` list containing 50 topics about everyday life, memories, preferences, and personal choices. Preserved the user's ten revised prompts, corrected mismatched catalog IDs, and added 40 prompts in the same style. Selection uses the Asia/Seoul date, with a midnight timer and focus/visibility catch-up. Active drafts and saved artwork keep their original topic ID/title/day. Rotation/extension checks use the actual list length; see the 2026-11-16 log. The user requested daily updates; remaining participation-rule decisions stay in T07.
 - [x] **T09: Add topic history and collection filtering.** Depends on T08. Let users find previous work by topic/date, with clear empty states.
 - [x] **T10: Centralize drawing-session configuration.** Use one duration setting instead of the two hardcoded 180-second values. Define timer behavior after sleep, backgrounding, reload, undo to blank, and erasing on a blank canvas; verify the chosen rules.
 - [ ] **T11: Validate the service-learning objective.** Conduct a small university-student pilot with consent. Evaluate ease of starting/completing, willingness to return, and perceived creative engagement. Agree on success criteria before collecting results; do not treat participation counts alone as proof of improved imagination.
@@ -88,4 +88,4 @@ Completed local tasks were checked using the Chrome harness and native pointer c
 - [x] **T29: Temporary profile search.** Search clearly labeled fixture profiles by nickname, handle, or interest; show profile artwork previews and empty/reset states. This does not complete T13 or provide actual identity, remote search, or follows.
 - [x] **T30: Project introduction.** Add a compact page based on Plan.md covering the university-student objective, usage, developers/GIST service learning, current local scope, and planned social/game direction.
 
-Latest evidence: 47 local checks and 22 mock-community checks per desktop/mobile viewport, native pointer checks, and direct route checks. The 11 social API checks include explicit foreign-key joins. A live anonymous artwork query succeeds; two-account permissions remain unverified. See the 2026-11-10 follow-up in Logs/Week_2.md.
+Latest local evidence (2026-11-16): 58 drawing/topic checks and 22 mock-community checks per desktop/mobile viewport, native pointer checks, and direct route checks. Both topics.js and script.js syntax checks pass. The previous 11 social API checks include explicit foreign-key joins; the previous live anonymous artwork query succeeded. Two-account permissions remain unverified. See Logs/Week_2.md.

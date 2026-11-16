@@ -91,7 +91,7 @@ Open decisions: final project name, topic cadence and curation, time-limit polic
 
 ## Current implementation checkpoint — Week 2
 
-The local Stage A flow is available and has passed automated Chrome desktop/mobile checks. Details and verification are recorded in [Logs/Week_2.md](Logs/Week_2.md); the original functions are captured in [Logs/Week_1.md](Logs/Week_1.md). Seven topics rotate weekly at Asia/Seoul midnight; practice and variation remain optional. These are adjustable starting defaults pending team/pilot review. Stage B/C shared-service and guessing work remains planned in TODO.md.
+The local Stage A flow is available and has passed automated Chrome desktop/mobile checks. Details and verification are recorded in [Logs/Week_2.md](Logs/Week_2.md); the original functions are captured in [Logs/Week_1.md](Logs/Week_1.md). As of 2026-11-16, fifty topics in the separate, extendable topics.js file rotate daily at Asia/Seoul midnight, repeating after fifty days. The user's revised prompts establish a direction of everyday scenes, personal memories, preferences, and simple imagined choices. Topics use short Korean titles and concrete questions that can be expressed as a scene or object within the drawing session. Open pages refresh at midnight and on return from backgrounding; active drawings retain their starting topic/day. Practice and variation remain optional. Daily updates were requested by the user; other participation defaults remain subject to team/pilot review. Stage B/C shared-service and guessing work remains planned in TODO.md.
 
 ## Visual direction — current user preference
 

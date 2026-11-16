@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>낙서장</title>
   <link rel="stylesheet" href="../style.css">
+  <script src="../topics.js" defer></script>
   <script>localStorage.clear();const seed=document.createElement('canvas');seed.width=10;seed.height=10;localStorage.setItem('jogak-drawings',JSON.stringify([{}, {id:1,image:seed.toDataURL(),date:'2026-01-01T00:00:00Z',title:'old garden',caption:{bad:true},topicId:{bad:true}}]));localStorage.setItem('jogak-likes','[]');</script><script src="../script.js" defer></script>
 </head>
 <body>
@@ -62,10 +63,39 @@ window.addEventListener('load',async()=>{
  check('daily prompt rendered',document.querySelector('#topic-title').textContent.length>0);
  check('Korean date boundary',dayKey(new Date('2026-10-11T15:00:00Z'))==='2026-10-12'&&dayKey(new Date('2026-10-11T14:59:59Z'))==='2026-10-11');
  check('daily topic changes',dailyTopic('2026-10-12').id!==dailyTopic('2026-10-13').id);
+ check('separate list contains valid unique topics',topics.length>0&&new Set(topics.map(t=>t.id)).size===topics.length&&topics.every(t=>['id','title','description'].every(key=>typeof t[key]==='string'&&t[key].trim())));
+ const topicCount=topics.length;
+ const topicDays=Array.from({length:topicCount+1},(_,i)=>new Date(Date.UTC(2026,10,16+i)).toISOString().slice(0,10));
+ check('full rotation visits every topic and repeats',new Set(topicDays.slice(0,topicCount).map(day=>dailyTopic(day).id)).size===topicCount&&dailyTopic(topicDays[0]).id===dailyTopic(topicDays[topicCount]).id);
+ topics.push({id:'extension-test',title:'추가 주제',description:'추가된 주제'});
+ try {check('appending a topic extends the rotation',dailyTopic(new Date(topicCount*86400000).toISOString().slice(0,10)).id==='extension-test'&&dailyTopic(new Date((topicCount+1)*86400000).toISOString().slice(0,10)).id===topics[0].id);} finally {topics.pop();}
  check('invalid records rejected',!validEntry({})&&!validEntry({id:1,image:'javascript:bad',date:'2026-10-12'}));
  const event=(type,id,x=80,y=100)=>{if($('#draw').hidden){location.hash='draw';navigate();}const r=canvas.getBoundingClientRect();canvas.dispatchEvent(new PointerEvent(type,{pointerId:id,button:0,clientX:r.left+x,clientY:r.top+y,bubbles:true}));};
  // Real pointer capture requires a physical active pointer; stub only capture for synthetic events.
  const captures=new Set();canvas.setPointerCapture=id=>captures.add(id);canvas.hasPointerCapture=id=>captures.has(id);canvas.releasePointerCapture=id=>captures.delete(id);
+ const RealDate=Date;let testNow=RealDate.parse('2026-11-16T14:59:59Z');const realSetTimeout=window.setTimeout;
+ window.Date=class extends RealDate {constructor(...args){super(...(args.length?args:[testNow]));}static now(){return testNow;}};
+ try {
+   resetCanvas();let scheduledDelay,scheduledUpdate;
+   window.setTimeout=(callback,delay)=>{scheduledUpdate=callback;scheduledDelay=delay;return 0;};
+   scheduleDailyTopicUpdate();window.setTimeout=realSetTimeout;
+   check('refresh scheduled for Korean midnight',scheduledDelay===1000);
+   testNow+=1000;scheduledUpdate();
+   check('idle prompt and calendar refresh at midnight',session.day==='2026-11-17'&&session.topic.id===dailyTopic('2026-11-17').id&&$('#topic-title').textContent===session.topic.title&&$('.week-day.today').getAttribute('aria-label').startsWith('2026-11-17'));
+   testNow+=86400000;window.dispatchEvent(new Event('focus'));
+   check('focus catches up after sleeping across a day',session.day==='2026-11-18'&&session.topic.id===dailyTopic('2026-11-18').id);
+   testNow+=86400000;document.dispatchEvent(new Event('visibilitychange'));
+   check('visible tab catches up across a day',session.day==='2026-11-19');
+   event('pointerdown',99);event('pointerup',99);const startingTopic=session.topic.id,startingDay=session.day;
+   testNow+=86400000;scheduleDailyTopicUpdate();
+   check('active drawing retains starting topic and day',hasDrawing&&session.day===startingDay&&session.topic.id===startingTopic);
+   $('#clear').click();$('#confirm-clear').click();updateDailyTopic();
+   check('clearing a started drawing retains its topic',!hasDrawing&&deadline>0&&session.day===startingDay&&session.topic.id===startingTopic);
+   resetCanvas();switchMode('practice');testNow+=86400000;updateDailyTopic();
+   check('daily update preserves practice mode',session.mode==='practice'&&session.topic.id==='warmup');
+   resetCanvas();switchMode('variation');const variationDay=session.day,variationTopic=session.topic.id;testNow+=86400000;updateDailyTopic();
+   check('daily update preserves variation topic',session.mode==='variation'&&session.day===variationDay&&session.topic.id===variationTopic);
+ } finally {window.Date=RealDate;window.setTimeout=realSetTimeout;resetCanvas();scheduleDailyTopicUpdate();}
  event('pointerdown',1);const before=previous.x;event('pointermove',2,200);event('pointerup',2);check('second pointer ignored',drawing&&previous.x===before);event('pointerup',1);check('pointer ends and draft persists',!drawing&&readStore('jogak-draft',null));
  const originalTopic=session.topic.id;session.day='2026-10-11';$('#caption').value='<b>my caption</b>';finish();check('artwork saves original topic and caption',saved[0].topicId===originalTopic&&saved[0].caption==='<b>my caption</b>');
  check('caption is plain text',document.querySelector('.art-caption').textContent==='<b>my caption</b>'&&!document.querySelector('.art-caption b'));

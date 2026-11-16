@@ -3,15 +3,7 @@ const $ = selector => document.querySelector(selector);
 const canvas = $('#canvas'), ctx = canvas.getContext('2d');
 const DURATION = 180;
 const colors = ['#292b36','#6975e8','#f3b65b','#ed879b','#71b7a0','#b79bdb'];
-const topics = [
- {id:'planet-garden', title:'다른 행성의 작은 정원', description:'다른 행성에 있는 정원을 그려보세요.'},
- {id:'cloud-house', title:'구름 위의 집', description:'구름 위에 집이 있다면 어떤 모습일까요?'},
- {id:'pocket-friend', title:'주머니 속 작은 친구', description:'주머니에 들어갈 만큼 작은 친구를 그려보세요.'},
- {id:'midnight-shop', title:'자정에만 열리는 가게', description:'자정에만 문을 여는 가게를 그려보세요.'},
- {id:'walking-cup', title:'산책하는 찻잔', description:'찻잔에 다리가 달렸다면 어디로 갈까요?'},
- {id:'sound-shape', title:'좋아하는 소리의 모양', description:'좋아하는 소리를 선과 색으로 표현해보세요.'},
- {id:'future-window', title:'내일로 향하는 창문', description:'내일 보고 싶은 풍경을 그려보세요.'}
-];
+const topics = DOODLER_TOPICS;
 function dayKey(date = new Date()) { return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(date); }
 function dailyTopic(day = dayKey()) { const index = Math.floor(Date.parse(day+'T00:00:00Z')/86400000); return topics[((index % topics.length)+topics.length)%topics.length]; }
 function readStore(key,fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } }
@@ -136,9 +128,25 @@ function compare(entry){const parent=saved.find(e=>e.id===entry.parentId);if(!pa
 function renderMine(){const selected=$('#topic-filter').value;const available=new Map(saved.map(e=>[e.topicId||'legacy-garden',e.title||'나의 그림']));$('#topic-filter').replaceChildren(new Option('모든 주제','all'));available.forEach((title,id)=>$('#topic-filter').add(new Option(title,id)));$('#topic-filter').value=available.has(selected)?selected:'all';$('#mine-grid').replaceChildren();$('#count').textContent=saved.length+'장';const mode=$('#mode-filter').value,topic=$('#topic-filter').value;const entries=saved.filter(e=>(mode==='all'||(e.mode||'legacy')===mode)&&(topic==='all'||(e.topicId||'legacy-garden')===topic));$('#empty').hidden=entries.length>0;$('#empty h2').textContent=saved.length?'조건에 맞는 그림이 없습니다.':'저장한 그림이 없습니다.';let lastDay='';entries.forEach(entry=>{const date=dayKey(new Date(entry.date));if(date!==lastDay){const h=document.createElement('h2');h.className='journal-date';h.textContent=date.replaceAll('-',' / ');$('#mine-grid').append(h);lastDay=date;}const modes={daily:'오늘의 주제',practice:'연습',variation:'조건 추가'};const {article,info}=imageCard(entry.image,entry.title||'나의 그림',modes[entry.mode]||'이전 기록');if(typeof entry.caption==='string'&&entry.caption){const p=document.createElement('p');p.className='art-caption';p.textContent=entry.caption;article.append(p);}const actions=document.createElement('div');actions.className='card-actions';actions.append(action('그림 ↓',()=>download(entry.image,'nakseojang-'+date+'.png')),action('카드 ↓',()=>exportCard(entry)),action('조건 추가',()=>switchMode('variation',entry)));if(entry.parentId)actions.append(action('비교',()=>compare(entry)));actions.append(action('삭제',()=>{pendingDelete=entry.id;$('#delete-dialog').showModal();}));article.append(actions);$('#mine-grid').append(article);});renderProgress();}
 $('#mode-filter').onchange=renderMine;$('#topic-filter').onchange=renderMine;$('#cancel-delete').onclick=()=>$('#delete-dialog').close();$('#confirm-delete').onclick=()=>{saved=saved.filter(e=>e.id!==pendingDelete);const stored=persist('jogak-drawings',saved);$('#delete-dialog').close();renderMine();toast(stored?'그림을 삭제했습니다.':'현재 탭에서 삭제했습니다. 브라우저 저장에는 실패했습니다.');};$('#close-compare').onclick=()=>$('#compare-dialog').close();
 function navigate(){const name=['draw','gallery','mine','profiles','community','about'].includes(location.hash.slice(1))?location.hash.slice(1):'draw';stopDrawing();saveDraft();document.querySelectorAll('.page').forEach(page=>page.hidden=page.id!==name);document.querySelectorAll('[data-page]').forEach(link=>{link.classList.toggle('active',link.dataset.page===name);if(link.dataset.page===name)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');});if(name==='mine')renderMine();if(name==='profiles')renderProfiles();window.scrollTo(0,0);requestAnimationFrame(()=>window.scrollTo(0,0));}
-window.addEventListener('hashchange',navigate);window.addEventListener('pagehide',saveDraft);window.addEventListener('beforeunload',event=>{if(hasDrawing){saveDraft();event.preventDefault();event.returnValue='';}});document.addEventListener('visibilitychange',()=>{if(document.hidden)saveDraft();else if(timerId)tick();});
+window.addEventListener('hashchange',navigate);window.addEventListener('pagehide',saveDraft);window.addEventListener('beforeunload',event=>{if(hasDrawing){saveDraft();event.preventDefault();event.returnValue='';}});document.addEventListener('visibilitychange',()=>{if(document.hidden)saveDraft();else {if(timerId)tick();scheduleDailyTopicUpdate();}});
 async function init(){const draft=readStore('jogak-draft',null);resetCanvas();renderGallery();renderMine();navigate();if(draft&&typeof draft.image==='string'&&/^data:image\/png;base64,/.test(draft.image)&&draft.session&&typeof draft.session.topic?.title==='string'&&typeof draft.session.topic?.id==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(draft.session.day)&&['daily','practice','variation'].includes(draft.session.mode)&&Number.isFinite(draft.deadline)&&draft.deadline>0){try{const img=new Image();img.src=draft.image;await img.decode();ctx.drawImage(img,0,0,canvas.width,canvas.height);session=draft.session;deadline=draft.deadline;hasDrawing=true;$('#canvas-hint').hidden=true;$('#caption').value=typeof draft.caption==='string'?draft.caption.slice(0,100):'';updatePrompt();remaining=Math.max(0,Math.ceil((deadline-Date.now())/1000));updateTimer();if(!remaining)finish(true);else{startTimer();saveDraft();toast('저장 중이던 그림을 복원했습니다.');}}catch{removeDraft();}}}
-setInterval(()=>{if(!hasDrawing&&!deadline&&session.mode==='daily'&&session.day!==dayKey()){session.day=dayKey();session.topic=dailyTopic();updatePrompt();renderProgress();}},30000);
+// An active drawing keeps the topic/day it started with, including after midnight.
+function updateDailyTopic() {
+  const day=dayKey();
+  if(!hasDrawing&&!drawing&&!deadline&&session.mode==='daily'&&session.day!==day){
+    session.day=day;session.topic=dailyTopic(day);updatePrompt();
+  }
+  renderProgress();
+}
+let dailyTopicTimeout;
+function scheduleDailyTopicUpdate() {
+  clearTimeout(dailyTopicTimeout);
+  updateDailyTopic();
+  const midnight=Date.parse(dayKey()+'T00:00:00+09:00')+86400000;
+  dailyTopicTimeout=setTimeout(scheduleDailyTopicUpdate,Math.max(1,midnight-Date.now()));
+}
+window.addEventListener('focus',scheduleDailyTopicUpdate);
+scheduleDailyTopicUpdate();
 
 const exampleProfiles=[
  {id:'leaf',name:'풀잎',handle:'leaf_note',bio:'정원과 식물을 주로 그립니다.',tags:['정원','식물'],art:[0,1]},
