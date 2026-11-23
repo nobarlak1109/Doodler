@@ -10,6 +10,7 @@ The static Korean-language app works offline without dependencies. Supabase publ
 
 ## Completed in source
 
+- [x] Shared feedback banner above all six pages, with the Korean coffee-coupon invitation and a Google Forms link that opens in a new tab.
 - [x] Mouse/touch drawing using Canvas and pointer events.
 - [x] Six colors, brush width, eraser, undo (up to 12 snapshots), and confirmed clear.
 - [x] Three-minute timer beginning with the first stroke, continuing across app screens, and automatic completion.

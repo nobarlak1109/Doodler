@@ -146,3 +146,11 @@ Detailed setup instructions remain in [backend/SETUP.md](../backend/SETUP.md). T
 - Updated README, Plan, and TODO to reflect the fifty-topic catalog and curation direction. Preserved Logs/Week_1.md.
 - Verification: node --check topics.js and node --check script.js passed. A direct catalog validation confirmed exactly fifty entries, unique IDs and titles, ID format, and nonempty descriptions. node tests/run.cjs passed 58 drawing/topic checks and 22 mock-community checks at both desktop/mobile sizes, plus native pointer capture and direct-route/layout checks, using an isolated temporary Chrome profile.
 - Outstanding limitations remain those recorded above: list edits can change the current/future date selection, topic selection uses the device clock, and deploying the catalog requires updating the hosted file and reloading. Historical records are not migrated to the renamed catalog IDs. No deployment or backend changes were performed.
+
+## 2026-11-23 — Shared feedback banner
+
+- Added one shared banner before the navigation header, visible above all six app pages. Included the requested Korean title and invitation verbatim, with the survey link on its own line.
+- The Google Forms link opens in a new tab with noopener/noreferrer and a visible Korean new-tab hint, keeping the drawing page available. Used a labeled aside, keyboard focus styling, and responsive spacing/link wrapping.
+- Updated README and TODO; preserved Logs/Week_1.md. Browser screenshots were refreshed by the existing runner.
+- Verification: node --check script.js passed. node tests/run.cjs passed 58 drawing/topic checks and 22 mock-community checks at both desktop and mobile sizes, native pointer capture, and existing direct-route/layout checks. Visually checked the mobile banner screenshot. Chrome disconnected inside the sandbox; the approved rerun outside it passed with an isolated temporary profile.
+- No deployment or backend changes were performed. The external form was linked as supplied; no survey response was submitted.
